@@ -26,6 +26,65 @@ app.get("/health", async (_req, res) => {
   }
 });
 
+app.get("/api/dashboard/summary", async (_req, res, next) => {
+  try {
+    const result = await query(
+      `SELECT
+         (SELECT COUNT(*)::int FROM pets) AS "petCount",
+         (SELECT COUNT(*)::int FROM tractive_trackers) AS "trackerCount",
+         (SELECT COUNT(*)::int FROM tractive_location_reports) AS "locationReportCount",
+         (SELECT COUNT(*)::int FROM tractive_hardware_reports) AS "hardwareReportCount",
+         (SELECT MAX(last_synced_at) FROM tractive_trackers) AS "latestSyncAt",
+         (SELECT ROUND(AVG(battery_level)::numeric, 1) FROM tractive_hardware_reports) AS "averageBatteryLevel"`,
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/dashboard/trackers", async (_req, res, next) => {
+  try {
+    const result = await query(
+      `SELECT
+         tt.tracker_id AS "trackerId",
+         tt.last_synced_at AS "lastSyncedAt",
+         p.id AS "petId",
+         p.name AS "petName",
+         p.species AS "petSpecies",
+         lr.latitude,
+         lr.longitude,
+         lr.speed,
+         lr.altitude,
+         lr.observed_at AS "locationObservedAt",
+         hr.battery_level AS "batteryLevel",
+         hr.observed_at AS "hardwareObservedAt"
+       FROM tractive_trackers tt
+       LEFT JOIN pets p ON p.id = tt.pet_id
+       LEFT JOIN LATERAL (
+         SELECT latitude, longitude, speed, altitude, observed_at
+         FROM tractive_location_reports
+         WHERE tracker_id = tt.tracker_id
+         ORDER BY observed_at DESC NULLS LAST, created_at DESC
+         LIMIT 1
+       ) lr ON true
+       LEFT JOIN LATERAL (
+         SELECT battery_level, observed_at
+         FROM tractive_hardware_reports
+         WHERE tracker_id = tt.tracker_id
+         ORDER BY observed_at DESC NULLS LAST, created_at DESC
+         LIMIT 1
+       ) hr ON true
+       ORDER BY tt.updated_at DESC, tt.tracker_id ASC`,
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get("/api/pets", async (_req, res, next) => {
   try {
     const result = await query(
