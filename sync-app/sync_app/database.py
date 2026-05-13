@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-import psycopg2
-from psycopg2.extras import Json
+import psycopg
+from psycopg.types.json import Jsonb
 
 
 def _as_datetime(unix_timestamp: Any) -> datetime | None:
@@ -18,7 +18,7 @@ def _as_datetime(unix_timestamp: Any) -> datetime | None:
 
 class SyncDatabase:
     def __init__(self, database_url: str) -> None:
-        self._connection = psycopg2.connect(database_url)
+        self._connection = psycopg.connect(database_url)
 
     def close(self) -> None:
         self._connection.close()
@@ -77,7 +77,7 @@ class SyncDatabase:
                 (
                     tracker_id,
                     report.get("report_id"),
-                    Json(report),
+                    Jsonb(report),
                     lat,
                     lon,
                     report.get("speed"),
@@ -108,7 +108,7 @@ class SyncDatabase:
                 (
                     tracker_id,
                     report.get("report_id"),
-                    Json(report),
+                    Jsonb(report),
                     report.get("battery_level"),
                     _as_datetime(report.get("time")),
                 ),
