@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pet-dashboard-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-pet_dashboard}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-pet_dashboard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: pet-dashboard-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pet_dashboard}
+
+  webapp:
+    build: ./web-app
+    container_name: pet-dashboard-webapp
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+  sync:
+    build: ./sync-app
+    container_name: pet-dashboard-sync
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pet_dashboard}
+      TRACTIVE_EMAIL: ${TRACTIVE_EMAIL}
+      TRACTIVE_PASSWORD: ${TRACTIVE_PASSWORD}
+      TRACTIVE_CLIENT_ID: ${TRACTIVE_CLIENT_ID:-625e533dc3c3b41c28a669f0}
+      TRACTIVE_TRACKER_IDS: ${TRACTIVE_TRACKER_IDS}
+      LOCATION_HISTORY_HOURS: ${LOCATION_HISTORY_HOURS:-48}
+      SYNC_DRY_RUN: ${SYNC_DRY_RUN:-false}
+    profiles:
+      - sync
+
+volumes:
+  postgres_data:

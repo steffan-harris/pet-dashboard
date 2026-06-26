@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the pet-dashboard Tractive sync once
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/pet-dashboard
+ExecStart=/usr/bin/docker compose --profile sync run --rm sync
