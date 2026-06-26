@@ -114,6 +114,70 @@ class SyncDatabase:
                 ),
             )
 
+    def upsert_location_history(
+        self, tracker_id: str, points: list[dict[str, Any]]
+    ) -> None:
+        rows = []
+        for point in points:
+            observed_at = _as_datetime(point.get("time"))
+            if observed_at is None:
+                continue
+
+            lat = None
+            lon = None
+            latlong = point.get("latlong")
+            if isinstance(latlong, list) and len(latlong) >= 2:
+                lat = latlong[0]
+                lon = latlong[1]
+
+            rows.append(
+                (
+                    tracker_id,
+                    Jsonb(point),
+                    lat,
+                    lon,
+                    point.get("alt"),
+                    point.get("speed"),
+                    point.get("course"),
+                    point.get("pos_uncertainty"),
+                    point.get("sensor_used"),
+                    observed_at,
+                )
+            )
+
+        if not rows:
+            return
+
+        with self._connection.cursor() as cursor:
+            cursor.executemany(
+                """
+                INSERT INTO tractive_location_history (
+                    tracker_id,
+                    payload,
+                    latitude,
+                    longitude,
+                    altitude,
+                    speed,
+                    course,
+                    pos_uncertainty,
+                    sensor_used,
+                    observed_at
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (tracker_id, observed_at)
+                DO UPDATE SET
+                    payload = EXCLUDED.payload,
+                    latitude = EXCLUDED.latitude,
+                    longitude = EXCLUDED.longitude,
+                    altitude = EXCLUDED.altitude,
+                    speed = EXCLUDED.speed,
+                    course = EXCLUDED.course,
+                    pos_uncertainty = EXCLUDED.pos_uncertainty,
+                    sensor_used = EXCLUDED.sensor_used
+                """,
+                rows,
+            )
+
     def mark_synced(self, tracker_id: str) -> None:
         with self._connection.cursor() as cursor:
             cursor.execute(

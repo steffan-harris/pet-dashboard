@@ -85,6 +85,37 @@ app.get("/api/dashboard/trackers", async (_req, res, next) => {
   }
 });
 
+app.get("/api/dashboard/trackers/:trackerId/locations", async (req, res, next) => {
+  try {
+    const { trackerId } = req.params;
+    const hours = Number(req.query.hours ?? 48);
+    if (!Number.isFinite(hours) || hours <= 0) {
+      return res.status(400).json({ error: "Invalid hours parameter" });
+    }
+
+    const result = await query(
+      `SELECT
+         latitude,
+         longitude,
+         altitude,
+         speed,
+         course,
+         observed_at AS "observedAt"
+       FROM tractive_location_history
+       WHERE tracker_id = $1
+         AND observed_at >= NOW() - ($2 || ' hours')::interval
+         AND latitude IS NOT NULL
+         AND longitude IS NOT NULL
+       ORDER BY observed_at ASC`,
+      [trackerId, hours],
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get("/api/pets", async (_req, res, next) => {
   try {
     const result = await query(

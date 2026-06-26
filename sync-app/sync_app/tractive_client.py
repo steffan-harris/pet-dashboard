@@ -12,6 +12,7 @@ class TrackerSnapshot:
     tracker_details: dict[str, Any]
     location_report: dict[str, Any]
     hardware_report: dict[str, Any]
+    location_history: list[dict[str, Any]]
 
 
 class TractiveModuleClient:
@@ -44,15 +45,19 @@ class TractiveModuleClient:
                 resolved_ids.append(tracker_id)
         return resolved_ids
 
-    async def fetch_tracker_snapshot(self, tracker_id: str) -> TrackerSnapshot:
+    async def fetch_tracker_snapshot(
+        self, tracker_id: str, history_time_from: float, history_time_to: float
+    ) -> TrackerSnapshot:
         tracker = self._tractive.tracker(tracker_id)
         details = await tracker.details()
         location = await tracker.pos_report()
         hardware = await tracker.hw_info()
+        history = await tracker.positions(history_time_from, history_time_to, "json")
 
         return TrackerSnapshot(
             tracker_id=tracker_id,
             tracker_details=details,
             location_report=location,
             hardware_report=hardware,
+            location_history=history if isinstance(history, list) else [],
         )

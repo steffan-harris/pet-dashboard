@@ -48,7 +48,11 @@ async def _run() -> int:
     )
 
     try:
-        sync_service = TractiveSyncService(client=client, database=database)
+        sync_service = TractiveSyncService(
+            client=client,
+            database=database,
+            location_history_hours=settings.location_history_hours,
+        )
         results = await sync_service.run(tracker_ids=tracker_ids, dry_run=dry_run)
     finally:
         await client.close()

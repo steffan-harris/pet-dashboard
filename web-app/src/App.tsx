@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
+import LocationMap from "./LocationMap";
 
 type Summary = {
   petCount: number;
@@ -159,6 +160,13 @@ function App() {
           </p>
         </article>
       </section>
+
+      {freshestTracker ? (
+        <section className="panel map-panel">
+          <h2>Last 48 Hours</h2>
+          <LocationMap trackerId={freshestTracker.trackerId} hours={48} />
+        </section>
+      ) : null}
 
       <section className="split-layout">
         <article className="panel">

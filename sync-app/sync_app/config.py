@@ -18,6 +18,7 @@ class Settings:
     database_url: str
     request_timeout_seconds: int
     dry_run: bool
+    location_history_hours: int
 
 
 def _parse_tracker_ids(raw_value: str | None) -> list[str]:
@@ -43,6 +44,7 @@ def get_settings() -> Settings:
     ).strip()
     timeout_seconds = int(os.getenv("REQUEST_TIMEOUT_SECONDS", "20").strip())
     dry_run = _parse_bool(os.getenv("SYNC_DRY_RUN"), False)
+    location_history_hours = int(os.getenv("LOCATION_HISTORY_HOURS", "48").strip())
 
     if not email:
         raise ValueError("TRACTIVE_EMAIL is required")
@@ -57,4 +59,5 @@ def get_settings() -> Settings:
         database_url=database_url,
         request_timeout_seconds=timeout_seconds,
         dry_run=dry_run,
+        location_history_hours=location_history_hours,
     )

@@ -108,6 +108,17 @@ h1 {
   gap: 0.9rem;
 }
 
+.map-panel {
+  margin-bottom: 0.9rem;
+  height: 360px;
+}
+
+.map-panel .leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 0.75rem;
+}
+
 .panel {
   border: 1px solid #d8dbe4;
   border-radius: 1rem;
