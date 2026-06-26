@@ -32,8 +32,15 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
 
   sync:
     build: ./sync-app
@@ -54,3 +61,5 @@ services:
 
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:
