@@ -10,7 +10,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-pet_dashboard}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-pet_dashboard}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -41,6 +45,9 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      - default
+      - caddy-net
 
   sync:
     build: ./sync-app
@@ -58,6 +65,10 @@ services:
       SYNC_DRY_RUN: ${SYNC_DRY_RUN:-false}
     profiles:
       - sync
+
+networks:
+  caddy-net:
+    external: true
 
 volumes:
   postgres_data:
