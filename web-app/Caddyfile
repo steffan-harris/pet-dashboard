@@ -19,3 +19,7 @@
 		try_files {path} /index.html
 	}
 }
+
+steffan.lol, www.steffan.lol {
+    reverse_proxy steffan-lol:80
+}
