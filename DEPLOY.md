@@ -60,13 +60,16 @@ cd /opt/pet-dashboard
 
 (Or `rsync`/`scp` it over if you don't want to push the repo anywhere public.)
 
-## 4b. Bring up the shared Caddy stack first
+## 4b. Bring up the shared Caddy stack (creates `caddy-net`)
 
 The `server-config` repo owns the Caddy container, the `caddy-net` Docker
-network, and the `Caddyfile` block that routes `pet-dashboard.steffan.lol`
-to this stack's containers. Deploy that stack before this one — it creates
-`caddy-net`, which `docker-compose.yml` here declares as `external` and
-will refuse to start without.
+network, and the `Caddyfile` block that routes `pet-dashboard.steffan.lol` to
+this stack's containers.
+
+If you're migrating from the old setup (where this stack bound ports 80/443),
+stop/update this stack to free the ports, then deploy `server-config` to create
+`caddy-net`, then start this stack. `docker-compose.yml` here declares
+`caddy-net` as `external` and will refuse to start until the network exists.
 
 ## 5. Configure secrets
 
