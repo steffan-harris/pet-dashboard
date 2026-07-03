@@ -32,4 +32,5 @@ credentials, database URL, etc.).
 ## Deploying
 
 See [DEPLOY.md](DEPLOY.md) for deploying all three parts to a VPS with
-Docker, including HTTPS via Caddy and a systemd timer for the daily sync.
+Docker and a systemd timer for the daily sync. HTTPS/routing is handled by
+the shared Caddy container from the separate `server-config` repo.
